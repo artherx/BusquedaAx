@@ -48,3 +48,4 @@ class Nodo {
         this.H = H
     }
 }
+export default Nodo
