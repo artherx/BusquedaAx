@@ -1,0 +1,188 @@
+<body>
+  <div class="botones">
+    <button id="Inicio">Inicio</button>
+    <button id="Final">Final</button>
+    <button id="Muros">Muros</button>
+  </div>
+  <p>Tipo de selecion: Muros</p>
+  <canvas id="Juego" width="400" height="400"></canvas>
+</body>
+<script>
+  import matriz from "../components/reglaJuego";
+  const canvas = document.querySelector("canvas");
+  const ctx = canvas.getContext("2d");
+  const muro = document.getElementById("Muros");
+  const final = document.getElementById("Final");
+  const inicio = document.getElementById("Inicio");
+
+  let typeC = 1;
+  let valores = matriz.matriz;
+
+  const cuadradoSize = 50; // Tamaño de cada cuadrado
+  const bordeColor = "black"; // Color del borde
+
+  // Dibuja los cuadrados con borde
+  for (let x = 0; x < canvas.width; x += cuadradoSize) {
+    for (let y = 0; y < canvas.height; y += cuadradoSize) {
+      ctx.fillStyle = "transparent"; // Color del cuadrado
+      ctx.strokeStyle = bordeColor; // Color del borde
+      ctx.fillRect(x, y, cuadradoSize, cuadradoSize);
+      ctx.strokeRect(x, y, cuadradoSize, cuadradoSize); // Dibuja el borde
+    }
+  }
+  //blanquear
+  function drawB(x, y) {
+    valores[x][y] = 0;
+    ctx.fillStyle = "rgb(138, 138, 255)";
+    ctx.strokeStyle = bordeColor;
+    ctx.fillRect(
+      x * cuadradoSize,
+      y * cuadradoSize,
+      cuadradoSize,
+      cuadradoSize
+    );
+    ctx.strokeRect(
+      x * cuadradoSize,
+      y * cuadradoSize,
+      cuadradoSize,
+      cuadradoSize
+    );
+    console.log(`cambio de valores ${valores[x][y]}`);
+  }
+  //*colorear
+  function drawC(x, y) {
+    if (typeC == 1) {
+      if (valores[x][y] !== 1) {
+        for (let i = 0; i < valores.length; i++)
+          for (let j = 0; j < valores.length; j++) {
+            if (valores[i][j] == 1) {
+              drawB(i, j);
+              console.log(`nuevo valo en i:${i} j:${j} = ${valores[i][j]}`);
+            }
+          }
+
+        ctx.fillStyle = "green";
+        console.log(`x:${x} y:${y} y puebo matris${valores}`);
+        valores[x][y] = 1;
+        ctx.fillRect(
+          x * cuadradoSize,
+          y * cuadradoSize,
+          cuadradoSize,
+          cuadradoSize
+        );
+        return 0;
+      }
+      drawB(x, y);
+    }
+    if (typeC == 2) {
+      if (valores[x][y] !== 2) {
+        for (let i = 0; i < valores.length; i++)
+          for (let j = 0; j < valores.length; j++) {
+            if (valores[i][j] == 2) {
+              drawB(i, j);
+              console.log(`nuevo valo en i:${i} j:${j} = ${valores[i][j]}`);
+            }
+          }
+
+        ctx.fillStyle = "red";
+        console.log(`x:${x} y:${y} y puebo matris${valores}`);
+        valores[x][y] = 2;
+        ctx.fillRect(
+          x * cuadradoSize,
+          y * cuadradoSize,
+          cuadradoSize,
+          cuadradoSize
+        );
+        return 0;
+      }
+      drawB(x, y);
+    }
+    if (typeC == 3) {
+      if (valores[x][y] !== 3) {
+        ctx.fillStyle = "blue";
+        console.log(`x:${x} y:${y} y puebo matris${valores}`);
+        valores[x][y] = 3;
+        ctx.fillRect(
+          x * cuadradoSize,
+          y * cuadradoSize,
+          cuadradoSize,
+          cuadradoSize
+        );
+        return 0;
+      }
+      drawB(x, y);
+    }
+  }
+  //accion mouse
+  canvas.addEventListener("click", function (event) {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    // Escala las coordenadas del evento del mouse a las dimensiones reales del canvas
+    const clickedRow = Math.floor(mouseY / cuadradoSize);
+    const clickedCol = Math.floor(mouseX / cuadradoSize);
+    drawC(clickedCol, clickedRow);
+  });
+  muro.addEventListener("click", () => {
+    typeC = 3;
+  });
+  final.addEventListener("click", () => {
+    typeC = 2;
+  });
+  inicio.addEventListener("click", () => {
+    typeC = 1;
+  });
+  function update() {}
+  update();
+</script>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    height: 100vh;
+    background-color: #222;
+    align-items: center;
+    justify-content: space-around;
+  }
+  p {
+    color: aliceblue;
+  }
+  .botones {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    height: 6rem;
+  }
+  button {
+    width: 10%;
+    height: 5rem;
+    border: none;
+    border-radius: 10px;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+  #Inicio {
+    background-color: rgb(118, 255, 118);
+  }
+  #Final {
+    background-color: rgb(255, 117, 117);
+  }
+  #Muros {
+    background-color: rgb(132, 132, 255);
+  }
+  button:hover,
+  #Inicio:hover,
+  #Salida:hover,
+  #Muros:hover {
+    color: aliceblue;
+    background-color: #696969;
+  }
+  #Juego {
+    background-color: rgb(138, 138, 255);
+    border-radius: 10px;
+  }
+</style>
