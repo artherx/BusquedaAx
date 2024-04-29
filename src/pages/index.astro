@@ -4,8 +4,9 @@
     <button id="Final">Final</button>
     <button id="Muros">Muros</button>
   </div>
-  <p>Tipo de selecion: Muros</p>
+  <p id="tex">Tipo de selecion: Inicio</p>
   <canvas id="Juego" width="400" height="400"></canvas>
+  <button id="calcular">Calcular</button>
 </body>
 <script>
   import matriz from "../components/reglaJuego";
@@ -14,9 +15,17 @@
   const muro = document.getElementById("Muros");
   const final = document.getElementById("Final");
   const inicio = document.getElementById("Inicio");
+  const calcu = document.getElementById("calcular");
+  const tex = document.getElementById("tex");
+
+  let iN = [];
+  let fI = [];
+  let openSet = [];
+  let closedSet = [];
 
   let typeC = 1;
   let valores = matriz.matriz;
+  let camino = [];
 
   const cuadradoSize = 50; // Tamaño de cada cuadrado
   const bordeColor = "black"; // Color del borde
@@ -52,6 +61,8 @@
   //*colorear
   function drawC(x, y) {
     if (typeC == 1) {
+      iN[0] = x;
+      iN[1] = y;
       if (valores[x][y] !== 1) {
         for (let i = 0; i < valores.length; i++)
           for (let j = 0; j < valores.length; j++) {
@@ -72,9 +83,12 @@
         );
         return 0;
       }
+      iN = [];
       drawB(x, y);
     }
     if (typeC == 2) {
+      fI[0] = x;
+      fI[1] = y;
       if (valores[x][y] !== 2) {
         for (let i = 0; i < valores.length; i++)
           for (let j = 0; j < valores.length; j++) {
@@ -95,6 +109,7 @@
         );
         return 0;
       }
+      fI = [];
       drawB(x, y);
     }
     if (typeC == 3) {
@@ -126,12 +141,199 @@
   });
   muro.addEventListener("click", () => {
     typeC = 3;
+    tex.textContent = "Tipo de selecion: Muro";
   });
   final.addEventListener("click", () => {
     typeC = 2;
+    tex.textContent = "Tipo de selecion: Final";
   });
   inicio.addEventListener("click", () => {
     typeC = 1;
+    tex.textContent = "Tipo de selecion: Inicio";
+  });
+  function iteracion(index) {
+    openSet[index].dibujaOS();
+  }
+  function iteracion1(index) {
+    closedSet[index].dibujaCS();
+  }
+  function iteracion2(index) {
+    camino[index].dibujaCamino();
+  }
+
+  function vencindario(x, y, tipo) {
+    //POSICIÓN
+    this.x = x;
+    this.y = y;
+    //tipo
+    this.tipo = tipo;
+    //PESOS
+    this.f = 0; //coste total (g+h)
+    this.g = 0; //pasos dados
+    this.h = 0; //heurística (estimación de lo que queda)
+    this.vecinos = [];
+    this.padre = null;
+    //MÉTODO QUE CALCULA SUS VECNIOS
+    this.addVecinos = function () {
+      if (this.y > 0) this.vecinos.push(valores[this.y - 1][this.x]); //vecino de arriba
+
+      if (this.x > 0 && this.y > 0)
+        this.vecinos.push(valores[this.y - 1][this.x - 1]); //vecino arriba izquierdo
+
+      if (this.x > 0) this.vecinos.push(valores[this.y][this.x - 1]); //vecino izquierdo
+
+      if (this.x > 0 && this.y < 8 - 1)
+        this.vecinos.push(valores[this.y + 1][this.x - 1]); //vecino abajo izquierdo
+
+      if (this.y < 8 - 1) this.vecinos.push(valores[this.y + 1][this.x]); //vecino de abajo
+
+      if (this.y < 8 - 1 && this.x < 8 - 1)
+        this.vecinos.push(valores[this.y + 1][this.x + 1]); //vecino de abajo derecha
+
+      if (this.x < 8 - 1) this.vecinos.push(valores[this.y][this.x + 1]); //vecino derecha
+
+      if (this.x < 8 - 1 && this.y > 0)
+        this.vecinos.push(valores[this.y - 1][this.x + 1]); //vecino arriba izquierdo
+    };
+    //DIBUJA OPENSET
+    this.dibujaOS = function () {
+      ctx.fillStyle = "#338";
+      ctx.fillRect(
+        this.x * cuadradoSize,
+        this.y * cuadradoSize,
+        cuadradoSize,
+        cuadradoSize
+      );
+    };
+
+    //DIBUJA CLOSEDSET
+    this.dibujaCS = function () {
+      ctx.fillStyle = "#800000";
+      ctx.fillRect(
+        this.x * cuadradoSize,
+        this.y * cuadradoSize,
+        cuadradoSize,
+        cuadradoSize
+      );
+    };
+
+    //DIBUJA CAMINO
+    this.dibujaCamino = function () {
+      ctx.fillStyle = "#00FFFF"; //cyan
+      ctx.fillRect(
+        this.x * cuadradoSize,
+        this.y * cuadradoSize,
+        cuadradoSize,
+        cuadradoSize
+      );
+    };
+  }
+  function borraDelArray(array, elemento) {
+    for (let i = array.length - 1; i >= 0; i--) {
+      if (array[i] == elemento) {
+        array.splice(i, 1);
+      }
+    }
+  }
+  calcu.addEventListener("click", () => {
+    if (iN.length != 0 && fI.length != 0) {
+      let principio;
+      let fin;
+      for (let i = 0; i < 8; i++)
+        for (let j = 0; j < 8; j++) {
+          valores[i][j] = new vencindario(i, j, valores[i][j]);
+        }
+      for (let i = 0; i < 8; i++)
+        for (let j = 0; j < 8; j++) {
+          valores[i][j].addVecinos();
+        }
+      principio = valores[iN[0]][iN[1]];
+      fin = valores[fI[0]][fI[1]];
+      openSet.push(principio);
+      console.log(valores);
+      let conteo = 0;
+      let verificador= false;
+      while (conteo < 1000) {
+        if (openSet.length > 0) {
+          var ganador = 0;
+          for (let i = 0; i < openSet.length; i++) {
+            if (openSet[i].f < openSet[ganador].f) {
+              ganador = i;
+            }
+          }
+          //Analizamos la casilla ganadora
+          var actual = openSet[ganador];
+
+          //SI HEMOS LLEGADO AL FINAL BUSCAMOS EL CAMINO DE VUELTA
+          if (actual === fin) {
+            var temporal = actual;
+            camino.push(temporal);
+
+            while (temporal.padre != null) {
+              temporal = temporal.padre;
+              camino.push(temporal);
+              console.log(`buscando padre ${temporal.padre}`);
+            }
+            let iteracionN = 1;
+            for (let i = 1; i < closedSet.length; i++) {
+              setTimeout(function () {
+                iteracion1(i);
+
+                if (iteracionN >= closedSet.length-1) {
+                  for (let i = 1; i < camino.length-1; i++) {
+                    setTimeout(function () {
+                      iteracion2(i);
+                    }, i * 500);
+                  }
+                }
+                iteracionN++;
+              }, i * 500);
+            }
+            verificador=true;
+            console.log(`camino encontrado ${conteo}`);
+            conteo = 1000;
+          }
+          //SI NO HEMOS LLEGADO AL FINAL, SEGUIMOS
+          else {
+            borraDelArray(openSet, actual);
+            closedSet.push(actual);
+
+            var vecinos = actual.vecinos;
+            for (let i = 0; i < vecinos.length; i++) {
+              var vecino = vecinos[i];
+              //SI EL VECINO NO ESTÁ EN CLOSEDSET Y NO ES UNA PARED, HACEMOS LOS CÁLCULOS
+              if (!closedSet.includes(vecino) && vecino.tipo != 3) {
+                var tempG = actual.g + 1;
+                //si el vecino está en OpenSet y su peso es mayor
+                if (openSet.includes(vecino)) {
+                  if (tempG < vecino.g) {
+                    vecino.g = tempG; //camino más corto
+                  }
+                } else {
+                  vecino.g = tempG;
+                  openSet.push(vecino);
+                }
+                //ACTUALIZAMOS VALORES
+                vecino.h = matriz.heuristica(vecino, fin);
+                vecino.f = vecino.g + vecino.h;
+
+                //GUARDAMOS EL PADRE (DE DÓNDE VENIMOS)
+                vecino.padre = actual;
+              }
+            }
+          }
+        }
+        conteo++;
+      }
+      if (verificador===false){
+        tex.textContent =
+        "No se encontro solucion, refrescar pagina";
+      }
+    } else {
+      tex.textContent =
+        "Tipo de selecion: Ingresar valores para inicio y final";
+      console.log(`Ingresar valores para inicio y final`);
+    }
   });
   function update() {}
   update();
